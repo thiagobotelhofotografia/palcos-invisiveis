@@ -33,6 +33,27 @@ const CONFIG = {
     document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
   }
 
+
+  window.__piLoader = true; /* avisa a página que este código está atualizado */
+  /* ---------- primeira dobra primeiro ----------
+     Imagens com data-src só começam a baixar depois que a foto principal
+     terminou de carregar, e apenas quando estão chegando perto da tela. */
+  (function () {
+    const imgs = $$("img[data-src]").filter(i => !i.closest(".cine-slide, .cine-thumbs"));
+    if (!imgs.length) return;
+    const show = i => { if (i.dataset.srcset) { i.srcset = i.dataset.srcset; delete i.dataset.srcset; } i.src = i.dataset.src; delete i.dataset.src; };
+    let started = false;
+    const start = () => {
+      if (started) return; started = true;
+      if (!("IntersectionObserver" in window)) { imgs.forEach(show); return; }
+      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }), { rootMargin: "500px 0px" });
+      imgs.forEach(i => io.observe(i));
+    };
+    const hero = $('img[fetchpriority="high"]');
+    if (!hero || hero.complete) start();
+    else { hero.addEventListener("load", start, { once: true }); hero.addEventListener("error", start, { once: true }); setTimeout(start, 4000); }
+  })();
+
   /* ---------- revelar ao rolar ---------- */
   const reveals = $$(".reveal");
   if ("IntersectionObserver" in window && !reduce) {
@@ -132,23 +153,38 @@ const CONFIG = {
   let cur = -1, playing = false, userStopped = false, visible = false, swapT;
 
   slides.forEach((s, i) => {
-    const img = $("img", s), thumb = img.getAttribute("src");
+    const img = $("img", s), thumb = img.dataset.src || img.getAttribute("src");
     const bg = document.createElement("div"); bg.className = "cine-bg";
-    bg.style.backgroundImage = 'url("' + thumb + '")'; s.prepend(bg);
+    bg.dataset.bg = thumb; s.prepend(bg); /* fundo só carrega quando o carrossel chega perto da tela */
     s.setAttribute("aria-label", "Fotografia " + (i + 1) + " de " + N + ": " + s.dataset.caption);
     const b = document.createElement("button"); b.type = "button";
     b.setAttribute("aria-label", "Ir para a fotografia " + (i + 1));
     if (s.classList.contains("portrait")) b.className = "portrait";
-    const t = document.createElement("img"); t.src = thumb; t.alt = ""; t.loading = "lazy"; b.appendChild(t);
+    const t = document.createElement("img"); t.dataset.src = thumb; t.alt = ""; b.appendChild(t);
     b.addEventListener("click", () => { go(i); stopAuto(true); });
     thumbsEl.appendChild(b);
   });
   const tbtns = [...thumbsEl.children];
 
+  /* o carrossel só começa a baixar fotos quando está chegando na tela,
+     para não disputar a internet com a primeira dobra */
+  let near = !("IntersectionObserver" in window);
+  /* cada foto do carrossel mostra a miniatura na hora e troca pela versão grande quando ela chegar */
+  const showThumbs = () => slides.forEach(s => { const im = $("img", s); if (im.dataset.src) { if ((im.getAttribute("src") || "").startsWith("data:")) im.src = im.dataset.src; delete im.dataset.src; } });
+  const loadThumbs = () => $$("img[data-src]", thumbsEl).forEach(t => { t.src = t.dataset.src; delete t.dataset.src; });
   const load = i => {
-    const img = $("img", slides[(i + N) % N]), f = img.dataset.full;
+    if (!near) return;
+    const s = slides[(i + N) % N], img = $("img", s), f = img.dataset.full, bg = $(".cine-bg", s);
+    if (bg && bg.dataset.bg) { bg.style.backgroundImage = 'url("' + bg.dataset.bg + '")'; delete bg.dataset.bg; }
     if (f && img.getAttribute("src") !== f) img.src = f;
   };
+  if (near) { showThumbs(); loadThumbs(); }
+  if (!near) {
+    const nio = new IntersectionObserver(es => {
+      if (es.some(e => e.isIntersecting)) { near = true; nio.disconnect(); showThumbs(); load(cur); load(cur + 1); load(cur - 1); loadThumbs(); }
+    }, { rootMargin: "600px 0px" });
+    nio.observe(root);
+  }
   const restartProgress = () => {
     prog.classList.remove("run", "static"); void prog.offsetWidth;
     if (playing) prog.classList.add("run");
