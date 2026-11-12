@@ -36,22 +36,25 @@ const CONFIG = {
 
   window.__piLoader = true; /* avisa a página que este código está atualizado */
   /* ---------- primeira dobra primeiro ----------
-     Imagens com data-src só começam a baixar depois que a foto principal
-     terminou de carregar, e apenas quando estão chegando perto da tela. */
+     As imagens de baixo (data-src) só são liberadas depois que a foto
+     principal terminou. A partir daí o próprio navegador cuida do resto
+     com loading="lazy" — funciona em Chrome, Safari, Firefox e Samsung. */
   (function () {
     const imgs = $$("img[data-src]").filter(i => !i.closest(".cine-slide, .cine-thumbs"));
-    if (!imgs.length) return;
-    const show = i => { if (i.dataset.srcset) { i.srcset = i.dataset.srcset; delete i.dataset.srcset; } i.src = i.dataset.src; delete i.dataset.src; };
     let started = false;
     const start = () => {
       if (started) return; started = true;
-      if (!("IntersectionObserver" in window)) { imgs.forEach(show); return; }
-      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }), { rootMargin: "500px 0px" });
-      imgs.forEach(i => io.observe(i));
+      imgs.forEach(i => {
+        if (!i.hasAttribute("loading")) i.loading = "lazy";
+        if (i.dataset.srcset) { i.srcset = i.dataset.srcset; delete i.dataset.srcset; }
+        i.src = i.dataset.src; delete i.dataset.src;
+      });
     };
     const hero = $('img[fetchpriority="high"]');
     if (!hero || hero.complete) start();
-    else { hero.addEventListener("load", start, { once: true }); hero.addEventListener("error", start, { once: true }); setTimeout(start, 4000); }
+    else { hero.addEventListener("load", start, { once: true }); hero.addEventListener("error", start, { once: true }); }
+    window.addEventListener("load", start, { once: true });
+    setTimeout(start, 3000);
   })();
 
   /* ---------- revelar ao rolar ---------- */
@@ -179,11 +182,11 @@ const CONFIG = {
     if (f && img.getAttribute("src") !== f) img.src = f;
   };
   if (near) { showThumbs(); loadThumbs(); }
+  const wake = () => { if (near) return; near = true; showThumbs(); load(cur); load(cur + 1); load(cur - 1); loadThumbs(); };
   if (!near) {
-    const nio = new IntersectionObserver(es => {
-      if (es.some(e => e.isIntersecting)) { near = true; nio.disconnect(); showThumbs(); load(cur); load(cur + 1); load(cur - 1); loadThumbs(); }
-    }, { rootMargin: "600px 0px" });
+    const nio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { nio.disconnect(); wake(); } }, { rootMargin: "600px 0px" });
     nio.observe(root);
+    window.addEventListener("load", () => setTimeout(wake, 1500), { once: true });
   }
   const restartProgress = () => {
     prog.classList.remove("run", "static"); void prog.offsetWidth;
