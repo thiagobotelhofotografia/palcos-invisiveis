@@ -436,13 +436,6 @@ dialog.modal::backdrop{background:rgba(6,5,4,.74);backdrop-filter:blur(6px)}
   .quickbar .wrap{grid-template-columns:repeat(2,1fr)}.qb:nth-child(3){padding-left:0;border-left:0}.qb:nth-child(n+3){border-top:1px solid var(--line)}
 }
 @media (max-width:860px){
-  .burger{display:flex}
-  .nav{position:fixed;inset:0;background:rgba(13,12,11,.97);flex-direction:column;justify-content:center;gap:26px;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;z-index:-1}
-  .menu-open .nav{opacity:1;visibility:visible}
-  .menu-open .burger{position:relative;z-index:2}
-  .nav a:not(.btn){font:400 38px var(--serif);color:var(--ink)}
-  .nav .btn{margin-top:10px}
-  .site-header{z-index:120}
   .cine-slide>img{max-width:calc(100% - 28px)}.js .cine-slide{padding:20px 0 96px}
   .cine-arrow{width:42px;height:42px;top:calc(50% - 60px)}.cine-arrow.prev{left:10px}.cine-arrow.next{right:10px}
   .cine-cap{padding:60px 18px 18px}
@@ -512,3 +505,34 @@ dialog.modal::backdrop{background:rgba(6,5,4,.74);backdrop-filter:blur(6px)}
 .rep-group{border-top:1px solid rgba(255,255,255,.17)}.rep-group:last-child{border-bottom:1px solid rgba(255,255,255,.17)}
 .rep-group summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 4px;color:#f7f1e8;font-weight:600;font-size:19px;list-style:none}.rep-group summary::-webkit-details-marker{display:none}.rep-group summary::after{content:'+';font-size:26px;color:#d4ac70;font-weight:300}.rep-group[open] summary::after{content:'−'}.rep-count{margin-left:auto;font-size:12px;letter-spacing:.06em;color:#c8a678;font-weight:400;white-space:nowrap}
 .rep-songs{padding:0 0 22px 28px;margin:0;list-style:decimal;color:#c8a678;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px}.rep-songs li{padding:11px 4px;border-bottom:1px solid rgba(255,255,255,.08);padding-left:5px}.rep-song{display:block;color:#f4eee4;font-size:15px}.rep-artist{display:block;color:#a9a198;font-size:12px;margin-top:4px}@media(max-width:620px){.rep-songs{grid-template-columns:1fr}.rep-group summary{font-size:17px}.repertorio-panel{margin-top:20px}}
+
+/* ============================================================
+   AJUSTES — 12/11/2026
+   ============================================================ */
+/* menu do computador: nada quebra em duas linhas */
+.nav a,.nav .btn{white-space:nowrap}
+@media (min-width:1280px){
+  .nav{gap:22px}
+  .nav a:not(.btn){font-size:12.5px}
+  .nav .btn.sm{padding:0 16px}
+}
+/* menu do celular / tablet (abaixo de 1280px) */
+@media (max-width:1279px){
+  .burger{display:flex}
+  .site-header{z-index:120}
+  .menu-open .site-header{backdrop-filter:none;-webkit-backdrop-filter:none;background:transparent;border-color:transparent}
+  .menu-open .logo,.menu-open .burger{position:relative;z-index:2}
+  .nav{position:fixed;inset:0;height:100vh;height:100dvh;background:var(--bg);flex-direction:column;align-items:center;justify-content:flex-start;gap:clamp(14px,2.6vh,26px);
+    padding:calc(86px + 2vh) var(--pad) calc(32px + env(safe-area-inset-bottom));overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;z-index:1}
+  .nav>:first-child{margin-top:auto}
+  .nav>:last-child{margin-bottom:auto}
+  .menu-open .nav{opacity:1;visibility:visible}
+  .nav a:not(.btn){font:400 clamp(28px,5.2vh,38px)/1.1 var(--serif);color:var(--ink);text-align:center}
+  .nav .btn{margin-top:6px}
+}
+/* setas da foto ampliada: a legenda não bloqueia mais o toque */
+.lb-cap{pointer-events:none}
+.lb-btn{z-index:2}
+/* Instagram da plataforma no rodapé */
+.foot-insta{display:inline-flex;align-items:center;gap:8px}
+.foot-insta .ic{font-size:15px;color:var(--gold)}
