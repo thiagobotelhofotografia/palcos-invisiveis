@@ -1,0 +1,9 @@
+PALCOS INVISÍVEIS — atualização semestral
+Abra index.html no navegador. Para publicar, envie todos os arquivos e a pasta assets juntos.
+Página de contratação: index.html
+Página comercial para artistas: para-artistas.html
+Perfil Nourrant: nourrant.html (10 fotos)
+Configure os números de WhatsApp no topo de script.js.
+O plano semestral custa R$ 300; cartão acrescido de taxas da operadora.
+
+INSTAGRAM: edite script.js, campo instagramNourrant, com o usuário autorizado do artista (sem @).
